@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Same Brain? Meet people nearby with a 5 question quiz</title>
+<meta name="description" content="Same Brain? matches you with people nearby through a quick five question quiz. If you both want to keep talking, a short private chat opens. No ads, no phone numbers, no photos of strangers.">
+<link rel="canonical" href="__SITE_URL__/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Same Brain? Meet people nearby with a 5 question quiz">
+<meta property="og:description" content="Five silly questions, one person nearby. Find out how alike you think, then chat if you both want to.">
+<meta property="og:url" content="__SITE_URL__/">
+<!--GOOGLE_VERIFY-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Onest:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Layout idea: one phone-width column of sticker-like cards on a sunny field; the radar is the loud part. */
+  --sun: #FFC93C;
+  --paper: #FFF8E4;
+  --ink: #1D1A3A;
+  --coral: #FF5D5D;
+  --mint: #2FCFA8;
+  --sky: #6C8CFF;
+  --muted: #5d597a;
+  --display: "Bagel Fat One", "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
+  --body: "Onest", "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body { background: var(--sun); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.45; }
+#app { max-width: 460px; margin: 0 auto; padding: 20px 16px 110px; display: flex; flex-direction: column; gap: 18px; }
+h1, h2, .display { font-family: var(--display); font-weight: 400; line-height: 1.05; margin: 0; text-wrap: balance; }
+h1 { font-size: 56px; letter-spacing: -0.5px; }
+h1 .q { color: var(--coral); display: inline-block; transform: rotate(8deg); }
+h2 { font-size: 22px; }
+p { margin: 0; }
+.muted { color: var(--muted); font-size: 14px; }
+.card { background: var(--paper); border: 3px solid var(--ink); border-radius: 18px; box-shadow: 5px 5px 0 var(--ink); padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+button { font: inherit; color: inherit; cursor: pointer; }
+.btn { font-family: var(--body); font-weight: 800; font-size: 16px; background: var(--coral); color: var(--ink); border: 3px solid var(--ink); border-radius: 14px; padding: 12px 18px; box-shadow: 3px 3px 0 var(--ink); transition: transform .08s, box-shadow .08s; }
+.btn:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ink); }
+.btn:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--ink); }
+.btn:disabled { background: #d9d3c0; color: var(--muted); cursor: default; transform: none; box-shadow: 3px 3px 0 var(--ink); }
+.btn.mint { background: var(--mint); }
+.btn.sky { background: var(--sky); }
+.btn.plain { background: var(--paper); }
+.btn.small { font-size: 14px; padding: 7px 12px; border-radius: 11px; border-width: 2px; box-shadow: 2px 2px 0 var(--ink); }
+.btn.wide { width: 100%; }
+.link { background: none; border: 0; padding: 4px; text-decoration: underline; font-size: 14px; color: var(--muted); }
+:focus-visible { outline: 3px solid var(--sky); outline-offset: 2px; }
+.row { display: flex; align-items: center; gap: 10px; }
+.row.wrap { flex-wrap: wrap; }
+.grow { flex: 1; min-width: 0; }
+.blob { --c: var(--sky); flex: none; width: 44px; height: 44px; border-radius: 50%; background: var(--c); border: 3px solid var(--ink); display: inline-flex; align-items: center; justify-content: center; font-size: 22px; line-height: 1; position: relative; }
+.blob.big { width: 64px; height: 64px; font-size: 32px; }
+.blob.on::after { content: ""; position: absolute; right: -3px; bottom: -3px; width: 14px; height: 14px; border-radius: 50%; background: var(--mint); border: 3px solid var(--ink); }
+.name { font-weight: 800; overflow-wrap: anywhere; }
+.pts { font-variant-numeric: tabular-nums; font-weight: 800; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font-weight: 600; font-size: 14px; background: #fff; border: 2px solid var(--ink); border-radius: 999px; padding: 6px 12px; }
+.chip.on { background: var(--sky); box-shadow: 2px 2px 0 var(--ink); }
+.tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
+.tags span { font-size: 12px; font-weight: 600; background: #fff; border: 1.5px solid var(--ink); border-radius: 999px; padding: 1px 8px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field > label, .label { font-weight: 800; font-size: 15px; }
+input[type=text], input[type=tel] { font: inherit; width: 100%; padding: 11px 12px; border: 3px solid var(--ink); border-radius: 12px; background: #fff; color: var(--ink); }
+.note { background: #fff; border: 2px dashed var(--ink); border-radius: 12px; padding: 10px 12px; font-size: 14px; }
+
+/* welcome */
+.steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; counter-reset: s; }
+.steps li { counter-increment: s; display: flex; gap: 12px; align-items: baseline; }
+.steps li::before { content: counter(s); font-family: var(--display); font-size: 22px; color: var(--coral); width: 18px; flex: none; }
+.check { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; }
+.check input { width: 22px; height: 22px; accent-color: var(--coral); flex: none; margin: 0; }
+.err { background: #ffe1dc; border: 2px solid var(--coral); border-radius: 12px; padding: 10px 12px; font-size: 14px; }
+
+/* radar */
+.radar { position: relative; width: 100%; aspect-ratio: 1; border-radius: 50%; background-color: var(--ink); border: 3px solid var(--ink); overflow: hidden;
+  background-image: radial-gradient(circle, transparent 0 24.5%, #ffffff2e 24.5% 25%, transparent 25% 49.5%, #ffffff2e 49.5% 50%, transparent 50% 74.5%, #ffffff2e 74.5% 75%, transparent 75%); }
+.radar .sweep { position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(from 0deg, #ffc93c00 0deg, #ffc93c00 300deg, #ffc93c88 360deg); animation: spin 4s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.radar .me, .radar .dot { position: absolute; transform: translate(-50%, -50%); }
+.radar .me { left: 50%; top: 50%; width: 52px; height: 52px; font-size: 26px; box-shadow: 0 0 0 6px #ffffff2e; }
+.radar .dot { padding: 0; }
+.radar .dot.busy { opacity: .55; }
+.radar .empty { position: absolute; left: 0; right: 0; bottom: 16%; text-align: center; color: #fff; font-size: 14px; padding: 0 22%; }
+input[type=range] { width: 100%; accent-color: var(--coral); height: 28px; margin: 0; }
+.list { display: flex; flex-direction: column; gap: 12px; }
+.more { display: flex; gap: 8px; padding-left: 54px; }
+.board { display: flex; flex-direction: column; gap: 6px; }
+.board .row { padding: 6px 8px; border-radius: 12px; }
+.board .row.me { background: var(--sun); }
+.board .rank { font-family: var(--display); width: 22px; text-align: center; }
+.board .blob { width: 32px; height: 32px; font-size: 16px; border-width: 2px; }
+.sim { font-family: var(--display); font-size: 20px; color: var(--coral); }
+
+/* bottom navigation */
+.nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; display: flex; justify-content: center; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); pointer-events: none; }
+.nav div { pointer-events: auto; display: flex; gap: 4px; background: var(--ink); border-radius: 18px; padding: 5px; width: 100%; max-width: 428px; }
+.nav button { flex: 1; background: none; border: 0; color: var(--paper); font-weight: 800; font-size: 14px; padding: 10px 4px; border-radius: 13px; }
+.nav button.on { background: var(--sun); color: var(--ink); }
+.nav .badge { background: var(--coral); color: var(--ink); border-radius: 999px; padding: 0 6px; margin-left: 4px; font-size: 12px; }
+
+/* duel */
+.versus { justify-content: space-between; }
+.versus .side { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 42%; text-align: center; font-size: 14px; }
+.versus .vs { font-family: var(--display); font-size: 24px; color: var(--coral); }
+.dots { display: flex; gap: 8px; justify-content: center; }
+.dots i { width: 22px; height: 22px; border-radius: 50%; border: 3px solid var(--ink); background: var(--paper); }
+.dots i.hit { background: var(--mint); }
+.dots i.miss { background: var(--coral); }
+.dots i.now { box-shadow: 0 0 0 4px #1d1a3a33; }
+.tbar { height: 12px; border: 3px solid var(--ink); border-radius: 8px; background: var(--paper); overflow: hidden; }
+.tbar b { display: block; height: 100%; width: 100%; background: var(--coral); }
+.qtext { font-family: var(--display); font-size: 28px; line-height: 1.1; text-wrap: balance; }
+.opts { display: flex; flex-direction: column; gap: 10px; }
+.opt { text-align: left; background: var(--paper); border: 3px solid var(--ink); border-radius: 14px; padding: 13px 14px; font-weight: 600; box-shadow: 3px 3px 0 var(--ink); display: flex; align-items: center; gap: 8px; }
+.opt span.t { flex: 1; }
+.opt.sel { background: var(--sky); }
+.opt.both { background: var(--mint); }
+.opt:disabled { cursor: default; color: var(--ink); }
+.opt .tag { font-size: 12px; font-weight: 800; background: var(--ink); color: var(--paper); border-radius: 8px; padding: 2px 7px; white-space: nowrap; }
+.banner { font-family: var(--display); font-size: 22px; text-align: center; padding: 8px; border-radius: 12px; border: 3px solid var(--ink); }
+.banner.hit { background: var(--mint); }
+.banner.miss { background: var(--coral); }
+.pct { font-family: var(--display); font-size: 96px; line-height: .9; text-align: center; color: var(--coral); -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill; }
+.center { text-align: center; }
+.reacts { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.feed { display: flex; flex-direction: column; gap: 6px; }
+.bubble { max-width: 80%; padding: 8px 12px; border: 2px solid var(--ink); border-radius: 14px; font-weight: 600; font-size: 15px; background: #fff; align-self: flex-start; overflow-wrap: anywhere; }
+.bubble.mine { align-self: flex-end; background: var(--sky); }
+
+/* chat */
+.clock { font-family: var(--display); font-size: 26px; font-variant-numeric: tabular-nums; }
+.clock.low { color: var(--coral); }
+#feed { min-height: 160px; max-height: 44vh; overflow-y: auto; padding: 4px 2px; }
+.inputrow { display: flex; gap: 8px; }
+.inputrow input { flex: 1; min-width: 0; }
+
+/* overlay + toast */
+.overlay { position: fixed; inset: 0; background: #1d1a3acc; display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 10; }
+.overlay .card { width: 100%; max-width: 380px; align-items: center; text-align: center; }
+#toasts { position: fixed; left: 0; right: 0; bottom: 84px; display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 20; pointer-events: none; padding: 0 16px; }
+.toast { background: var(--ink); color: var(--paper); padding: 10px 16px; border-radius: 12px; font-weight: 600; font-size: 15px; max-width: 420px; border: 2px solid var(--paper); }
+@media (max-width: 380px) { h1 { font-size: 46px; } .qtext { font-size: 24px; } .pct { font-size: 78px; } }
+@media (prefers-reduced-motion: reduce) { .radar .sweep { animation: none; } .btn { transition: none; } }
+</style>
+</head>
+<body>
+<main id="app">
+  <header><h1>Same Brain<span class="q">?</span></h1></header>
+  <p>Meet people nearby through a quick five question quiz. If you both want to keep talking, a short private chat opens.</p>
+</main>
+<div id="overlay"></div>
+<div id="toasts" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+  var app = document.getElementById('app');
+  var overlayEl = document.getElementById('overlay');
+  var toastsEl = document.getElementById('toasts');
+  var DEMO = /[?&]demo/.test(location.search);
+  var REACT = { gg: '🤝 Good game!', ha: '😂 Hahaha', twin: '👯 Are we twins?!', how: '🤨 How did you pick THAT?', again: '🔁 One more round?', bye: '👋 Bye, neighbour!' };
+  var CHAT_PRESETS = { hi: '👋 Hi there!', lol: '😂 That made me laugh', tell: '🤔 Tell me more', same: '🙌 Same here!', nice: '😊 Nice talking to you' };
+  var INTENT = { friends: 'New friends', dating: 'Dating', playing: 'Just playing' };
+
+  var me = null;          // {id, token}
+  var coords = null;      // {lat, lng}
+  var S = null;           // latest state from the server
+  var es = null;
+  var lastHTML = '';
+  var holding = false;    // true while the radius slider is being dragged
+  var openMore = null;    // id of the player row whose block/report buttons are open
+  var clock = { key: '', end: 0, total: 1 };
+  var welcomeError = '';
+  var busyJoin = false;
+  var tab = 'radar';
+  var dailyMode = false;
+  var editProfile = false;
+  var pf = null;          // profile form while it is open
+  var reg = { phone: '', code: '', testCode: null };
+  var chatKey = '', feedHTML = '';
+
+  // Demo mode keeps each tab separate, so two tabs on one computer act as two players.
+  function store(k, v) { try { var box = DEMO ? sessionStorage : localStorage; if (v === undefined) return JSON.parse(box.getItem(k)); box.setItem(k, JSON.stringify(v)); } catch (e) { return null; } }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function blob(p, cls) { return '<span class="blob ' + (cls || '') + '" style="--c:' + esc(p.color) + '">' + esc(p.emoji) + '</span>'; }
+  function tags(p) { return p.interests && p.interests.length ? '<div class="tags">' + p.interests.map(function (t) { return '<span>' + esc(t) + '</span>'; }).join('') + '</div>' : ''; }
+  function about(p) { return [p.intent ? INTENT[p.intent] : '', p.age || ''].filter(Boolean).join(' · '); }
+  function toast(text) {
+    var d = document.createElement('div'); d.className = 'toast'; d.textContent = text;
+    toastsEl.appendChild(d); setTimeout(function () { d.remove(); }, 3800);
+  }
+
+  function post(path, body) {
+    return fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, status: r.status, data: j }; }); });
+  }
+  // Resolves with the server's reply when the action worked, or null when it did not.
+  function act(type, extra) {
+    var body = Object.assign({ id: me.id, token: me.token, type: type }, extra || {});
+    return post('/api/act', body).then(function (r) {
+      if (r.status === 401) { join(); return null; }
+      if (!r.ok) { if (r.data && r.data.error) toast(r.data.error); return null; }
+      return r.data;
+    }).catch(function () { toast('No connection. Check your internet.'); return null; });
+  }
+
+  // ---------- joining ----------
+  function locate() {
+    return new Promise(function (resolve, reject) {
+      if (DEMO) return resolve({ lat: 33.8938 + (Math.random() - 0.5) * 0.04, lng: 35.5018 + (Math.random() - 0.5) * 0.04 });
+      if (!navigator.geolocation) return reject(new Error('This browser cannot share a location.'));
+      navigator.geolocation.getCurrentPosition(
+        function (pos) { resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }); },
+        function (e) {
+          reject(new Error(e.code === 1
+            ? 'Location is blocked. Allow it for this site in your browser settings, then try again.'
+            : 'Could not get your location. Check that location is switched on, then try again.'));
+        },
+        { enableHighAccuracy: false, timeout: 12000, maximumAge: 60000 });
+    });
+  }
+  function join() {
+    var saved = me || store('sb_player') || {};
+    return post('/api/join', { id: saved.id, token: saved.token, lat: coords.lat, lng: coords.lng, radius: store('sb_radius') || 10, adult: true })
+      .then(function (r) {
+        if (!r.ok) throw new Error((r.data && r.data.error) || 'Could not join.');
+        me = r.data; store('sb_player', me); connect();
+      });
+  }
+  function connect() {
+    if (es) es.close();
+    es = new EventSource('/api/events?id=' + encodeURIComponent(me.id) + '&token=' + encodeURIComponent(me.token));
+    es.addEventListener('state', function (ev) { S = JSON.parse(ev.data); render(); });
+    es.addEventListener('toast', function (ev) { toast(JSON.parse(ev.data).text); });
+    es.onerror = function () {
+      // The server forgot us (it restarted): join again.
+      if (es && es.readyState === 2) { es = null; setTimeout(function () { join().catch(function () {}); }, 1500); }
+    };
+  }
+  function start() {
+    if (busyJoin) return;
+    busyJoin = true; welcomeError = ''; renderWelcome();
+    locate().then(function (c) { coords = c; return join(); })
+      .then(function () { store('sb_ok', true); busyJoin = false; })
+      .catch(function (e) { busyJoin = false; welcomeError = e.message; renderWelcome(); });
+  }
+
+  // ---------- welcome ----------
+  function renderWelcome() {
+    var ok = !!store('sb_ok');
+    app.innerHTML =
+      '<header><h1>Same Brain<span class="q">?</span></h1></header>' +
+      '<p style="font-size:19px;font-weight:600">Five silly questions with someone nearby. If you both want to keep talking, a short chat opens.</p>' +
+      '<div class="card"><ol class="steps">' +
+      '<li><span>You get a funny nickname. No sign up needed to play.</span></li>' +
+      '<li><span>Your radar shows people around you and roughly how far they are.</span></li>' +
+      '<li><span>Play five questions together and see how alike you think.</span></li>' +
+      '<li><span>Both tap Keep talking and a timed private chat opens. Like each other? Add as friends.</span></li>' +
+      '</ol></div>' +
+      '<div class="card">' +
+      '<label class="check" for="adult"><input type="checkbox" id="adult"' + (ok ? ' checked' : '') + '><span>I am 18 or older, and I will be kind.</span></label>' +
+      (welcomeError ? '<div class="err" role="alert">' + esc(welcomeError) + '</div>' : '') +
+      '<button class="btn wide" id="go"' + (busyJoin ? ' disabled' : '') + '>' + (busyJoin ? 'Finding you…' : 'Find people near me') + '</button>' +
+      '<p class="muted">Your browser will ask for your location. Other people only ever see your nickname and a rough distance, never where you are. No ads. Phone numbers, links and social accounts are blocked in chat.' +
+      (DEMO ? ' <b>Demo mode: using a pretend location in Beirut.</b>' : '') + '</p>' +
+      '</div>';
+    document.getElementById('go').onclick = function () {
+      if (!document.getElementById('adult').checked) { welcomeError = 'Tick the box first to confirm you are 18 or older.'; return renderWelcome(); }
+      start();
+    };
+  }
+
+  // ---------- profile ----------
+  function profileHTML() {
+    var o = S.options;
+    if (!pf) pf = { age: S.me.age, intent: S.me.intent, interests: (S.me.interests || []).slice(), name: S.me.name };
+    var ready = pf.age && pf.intent && pf.interests.length === 3;
+    var h = '<header><h2 style="font-size:32px">' + (editProfile ? 'Your profile' : 'A little about you') + '</h2></header>' +
+      '<p class="muted">Tap to choose. This is what other people see next to your nickname.</p><section class="card">';
+    if (S.me.registered) h += '<div class="field"><label for="pname">Name shown to others</label><input type="text" id="pname" maxlength="14" autocomplete="off"></div>';
+    h += '<div class="field"><span class="label">Your age</span><div class="chips">' + o.ages.map(function (a) {
+      return '<button class="chip' + (pf.age === a ? ' on' : '') + '" data-pfage="' + esc(a) + '">' + esc(a) + '</button>'; }).join('') + '</div></div>';
+    h += '<div class="field"><span class="label">You are here for</span><div class="chips">' + o.intents.map(function (a) {
+      return '<button class="chip' + (pf.intent === a ? ' on' : '') + '" data-pfintent="' + esc(a) + '">' + esc(INTENT[a]) + '</button>'; }).join('') + '</div>' +
+      '<p class="muted">Suggestions only show people who picked the same thing.</p></div>';
+    h += '<div class="field"><span class="label">Three things you like (' + pf.interests.length + ' of 3)</span><div class="chips">' + o.interests.map(function (a) {
+      return '<button class="chip' + (pf.interests.indexOf(a) >= 0 ? ' on' : '') + '" data-pfint="' + esc(a) + '">' + esc(a) + '</button>'; }).join('') + '</div></div>';
+    h += '<button class="btn wide" data-pfsave="1"' + (ready ? '' : ' disabled') + '>Save</button>' +
+      (editProfile ? '<button class="link" data-pfcancel="1">Cancel</button>' : '') + '</section>';
+    return h;
+  }
+
+  // ---------- tabs ----------
+  function navHTML() {
+    var t = [['radar', 'Radar'], ['matches', 'Matches'], ['friends', 'Friends'], ['me', 'Me']];
+    return '<nav class="nav" aria-label="Sections"><div>' + t.map(function (x) {
+      var badge = x[0] === 'matches' && S.waves.length ? '<span class="badge">' + S.waves.length + '</span>' : '';
+      return '<button class="' + (tab === x[0] ? 'on' : '') + '" data-tab="' + x[0] + '">' + x[1] + badge + '</button>';
+    }).join('') + '</div></nav>';
+  }
+  function headerHTML() {
+    var m = S.me;
+    return '<header class="row"><h2 class="grow" style="font-size:28px">Same Brain<span style="color:var(--coral)">?</span></h2>' +
+      blob(m) + '<div><div class="name">' + esc(m.name) + '</div><div class="muted pts">' + m.points + ' pts</div></div></header>';
+  }
+  function challengeBtn(p) {
+    if (S.outgoing && S.outgoing.id === p.id) return '<button class="btn small plain" data-cancel="1">Waiting… cancel</button>';
+    if (p.busy) return '<button class="btn small" disabled>Busy</button>';
+    return '<button class="btn small" data-ch="' + esc(p.id) + '"' + (S.outgoing ? ' disabled' : '') + '>Play</button>';
+  }
+
+  function radarTab() {
+    var m = S.me, n = S.nearby, h = '';
+    h += '<section class="card"><div class="radar"><div class="sweep"></div>';
+    n.forEach(function (p) {
+      var r = [14, 24, 34, 43][p.ring - 1], a = p.angle * Math.PI / 180;
+      h += '<button class="blob dot' + (p.busy ? ' busy' : '') + '" data-ch="' + esc(p.id) + '" title="' + esc(p.name) + ', ' + esc(p.dist) + '" aria-label="Play with ' + esc(p.name) + '" style="--c:' + esc(p.color) +
+        ';left:' + (50 + Math.cos(a) * r).toFixed(1) + '%;top:' + (50 + Math.sin(a) * r).toFixed(1) + '%">' + esc(p.emoji) + '</button>';
+    });
+    h += blob(m, 'me');
+    if (!n.length) h += '<div class="empty">Nobody in range yet. Widen your radius or warm up against a bot.</div>';
+    h += '</div>' +
+      '<div><div class="row"><label for="radius" class="grow name">Radius</label><span class="pts" id="rlabel">' + m.radius + ' km</span></div>' +
+      '<input type="range" id="radius" min="1" max="50" step="1" value="' + m.radius + '">' +
+      '<p class="muted">' + n.length + (n.length === 1 ? ' person' : ' people') + ' online in range. People only see you if you are inside their radius too.</p></div></section>';
+
+    h += '<section class="card"><h2>Online nearby</h2><div class="list">';
+    if (!n.length) h += '<p class="muted">Quiet around here. Send the link to someone nearby, or practise now.</p>';
+    n.forEach(function (p) {
+      h += '<div class="row">' + blob(p) + '<div class="grow"><div class="name">' + esc(p.name) + '</div><div class="muted">' + esc([p.dist, about(p)].filter(Boolean).join(' · ')) + '</div></div>' +
+        challengeBtn(p) + '<button class="link" data-more="' + esc(p.id) + '" aria-label="More options for ' + esc(p.name) + '">⋯</button></div>';
+      if (openMore === p.id) {
+        h += '<div class="more"><button class="btn small plain" data-block="' + esc(p.id) + '">Block</button><button class="btn small plain" data-report="' + esc(p.id) + '">Report and block</button></div>';
+      }
+    });
+    h += '</div><button class="btn sky wide" data-bot="1">Practise against a bot</button>' +
+      '<p class="muted">Bot rounds are for fun and do not count on the leaderboard.</p></section>';
+
+    h += '<section class="card"><h2>Top brains within ' + m.radius + ' km</h2><div class="board">';
+    S.board.forEach(function (b, i) {
+      h += '<div class="row' + (b.me ? ' me' : '') + '"><span class="rank">' + (i + 1) + '</span>' + blob(b) +
+        '<span class="grow name">' + esc(b.name) + (b.me ? ' (you)' : '') + '</span><span class="pts">' + b.points + '</span></div>';
+    });
+    h += '</div><p class="muted">A finished game gives both players 10 points, plus 10 for every matching answer.</p></section>';
+    return h;
+  }
+
+  function matchesTab() {
+    var h = '<section class="card"><h2>Today\'s five</h2>';
+    if (S.me.dailyDone) h += '<p>Done for today. Five new questions arrive tomorrow.</p>';
+    else h += '<p>Answer five questions on your own. Your answers are how we find people nearby who think like you, even when they are offline.</p><button class="btn wide" data-daily="1">Answer today\'s five</button>';
+    h += '</section>';
+
+    if (S.waves.length) {
+      h += '<section class="card"><h2>Waved at you</h2><div class="list">';
+      S.waves.forEach(function (p) {
+        h += '<div class="row">' + blob(p, p.online ? 'on' : '') + '<div class="grow"><div class="name">' + esc(p.name) + '</div><div class="muted">' +
+          esc([p.sim !== null ? p.sim + '% same brain' : '', about(p), p.online ? 'online' : 'offline'].filter(Boolean).join(' · ')) + '</div></div>' +
+          (p.online ? challengeBtn(p) : '') + '<button class="link" data-unwave="' + esc(p.id) + '">Dismiss</button></div>';
+      });
+      h += '</div><p class="muted">Play a game together when you are both online. A chat can open after the game.</p></section>';
+    }
+
+    h += '<section class="card"><h2>People nearby who think like you</h2><div class="list">';
+    if (!S.like.length) h += '<p class="muted">Nobody to suggest yet. Answer today\'s five and play a few games: suggestions need at least three questions you have both answered. Only people here for ' + esc((INTENT[S.me.intent] || '').toLowerCase()) + ' are shown.</p>';
+    S.like.forEach(function (p) {
+      h += '<div class="row">' + blob(p, p.online ? 'on' : '') + '<div class="grow"><div class="name">' + esc(p.name) + '</div><div class="muted">' +
+        esc([p.dist, p.age || '', p.online ? 'online' : 'offline'].filter(Boolean).join(' · ')) + '</div>' + tags(p) + '</div>' +
+        '<div style="text-align:right"><div class="sim">' + p.sim + '%</div>' +
+        (p.online ? challengeBtn(p) : '<button class="btn small sky" data-wave="' + esc(p.id) + '"' + (p.waved ? ' disabled' : '') + '>' + (p.waved ? 'Waved' : 'Wave') + '</button>') + '</div></div>';
+    });
+    h += '</div></section>';
+    return h;
+  }
+
+  function friendsTab() {
+    var m = S.me, cap = m.friendCap === null ? 'no limit' : m.friendCount + ' of ' + m.friendCap;
+    var h = '<section class="card"><div class="row"><h2 class="grow">Friends</h2><span class="pts">' + esc(cap) + '</span></div><div class="list">';
+    if (!S.friends.length) h += '<p class="muted">No friends yet. Play a game, tap Keep talking, and add each other when the chat ends.</p>';
+    S.friends.forEach(function (p) {
+      var waiting = S.outgoing && S.outgoing.id === p.id;
+      h += '<div class="row">' + blob(p, p.online ? 'on' : '') + '<div class="grow"><div class="name">' + esc(p.name) + '</div><div class="muted">' + (p.online ? (p.busy ? 'Busy' : 'Online') : 'Offline') + '</div></div>' +
+        (waiting ? '<button class="btn small plain" data-cancel="1">Waiting… cancel</button>'
+          : '<button class="btn small mint" data-chatreq="' + esc(p.id) + '"' + (p.online && !p.busy && !S.outgoing ? '' : ' disabled') + '>Chat</button>') +
+        '<button class="link" data-more="' + esc(p.id) + '" aria-label="More options for ' + esc(p.name) + '">⋯</button></div>';
+      if (openMore === p.id) {
+        h += '<div class="more"><button class="btn small plain" data-unfriend="' + esc(p.id) + '">Remove friend</button><button class="btn small plain" data-report="' + esc(p.id) + '">Report and block</button></div>';
+      }
+    });
+    h += '</div><p class="muted">Chats with friends have no time limit. Your plan sets how many friends you can keep.</p></section>';
+    return h;
+  }
+
+  function planLine(p) {
+    return (p.chatMs === null ? 'Unlimited chat with new matches' : Math.round(p.chatMs / 60000) + ' minute chats with new matches') + ' · ' +
+      (p.friends === null ? 'unlimited friends' : p.friends + (p.friends === 1 ? ' friend' : ' friends'));
+  }
+  function meTab() {
+    var m = S.me, h = '';
+    h += '<section class="card"><div class="row">' + blob(m, 'big') + '<div class="grow"><div class="name" style="font-size:20px">' + esc(m.name) + '</div><div class="muted">' + esc(about(m)) + '</div>' + tags(m) + '</div></div>' +
+      '<button class="btn plain small" data-editprofile="1" style="align-self:flex-start">Edit profile</button></section>';
+
+    h += '<section class="card"><h2>Your account</h2>';
+    if (m.registered) h += '<p><b>Phone verified.</b> You can type your own messages and choose your name.</p>';
+    else {
+      h += '<p>Verify your phone to type your own messages in chats and pick your own name. Without it you can still play and send ready-made messages.</p>';
+      if (reg.testCode === null) {
+        h += '<div class="field"><label for="phone">Mobile number with country code</label><input type="tel" id="phone" placeholder="+961 …" autocomplete="tel"></div>' +
+          '<button class="btn wide" data-regstart="1">Send me a code</button>';
+      } else {
+        h += '<div class="note"><b>Test mode.</b> No SMS is sent yet. Your code is <b>' + esc(reg.testCode) + '</b>.</div>' +
+          '<div class="field"><label for="code">Code</label><input type="tel" id="code" maxlength="4" autocomplete="one-time-code"></div>' +
+          '<button class="btn wide" data-regverify="1">Verify</button><button class="link" data-regreset="1">Use another number</button>';
+      }
+      h += '<p class="muted">Your number is never shown to anyone. Only a scrambled fingerprint of it is kept, to stop duplicate accounts.</p>';
+    }
+    h += '</section>';
+
+    h += '<section class="card"><h2>Plans</h2><div class="note"><b>Test mode.</b> Payment is not connected. Switching is free so you can try each plan.</div><div class="list">';
+    S.plans.forEach(function (p) {
+      var cur = m.plan === p.key;
+      h += '<div class="row"><div class="grow"><div class="name">' + esc(p.label) + (p.price ? ' · $' + p.price + ' a month' : '') + '</div><div class="muted">' + esc(planLine(p)) + '</div></div>' +
+        '<button class="btn small' + (cur ? '' : ' mint') + '" data-plan="' + esc(p.key) + '"' + (cur || !m.registered ? ' disabled' : '') + '>' + (cur ? 'Current' : 'Switch') + '</button></div>';
+    });
+    h += '</div><p class="muted">' + (m.registered ? 'When two people chat, the longer plan covers both.' : 'Verify your phone to change plan.') + ' Photos are not part of this test version.</p></section>';
+    return h;
+  }
+
+  function dailyHTML() {
+    var left = S.daily.filter(function (q) { return q.mine === null; });
+    if (!left.length) { dailyMode = false; tab = 'matches'; toast('Done. Come back tomorrow for five new ones.'); return tabHTML(); }
+    var q = left[0], n = S.daily.length - left.length + 1;
+    var h = '<header><h2 style="font-size:32px">Today\'s five</h2></header>' +
+      '<section class="card"><p class="muted">Question ' + n + ' of ' + S.daily.length + '. No timer, nobody is watching.</p><div class="qtext">' + esc(q.text) + '</div><div class="opts">';
+    q.options.forEach(function (t, k) { h += '<button class="opt" data-dq="' + q.id + '" data-dc="' + k + '"><span class="t">' + esc(t) + '</span></button>'; });
+    h += '</div></section><button class="link" data-dailyback="1">Finish later</button>';
+    return h;
+  }
+
+  function tabHTML() {
+    var body = tab === 'matches' ? matchesTab() : tab === 'friends' ? friendsTab() : tab === 'me' ? meTab() : radarTab();
+    return headerHTML() + body + navHTML();
+  }
+
+  // ---------- duel ----------
+  function duelHTML() {
+    var d = S.duel, m = S.me, o = d.opp, h = '';
+    h += '<div class="row versus"><div class="side">' + blob(m, 'big') + '<span class="name">You</span></div><span class="vs">vs</span>' +
+      '<div class="side">' + blob(o, 'big') + '<span class="name">' + esc(o.name) + (o.bot ? ' (bot)' : '') + '</span></div></div>';
+    h += '<div class="dots" aria-label="Progress">';
+    for (var i = 0; i < d.total; i++) {
+      h += '<i class="' + (i < d.marks.length ? (d.marks[i] ? 'hit' : 'miss') : (d.phase === 'q' && i === d.idx ? 'now' : '')) + '"></i>';
+    }
+    h += '</div>';
+
+    if (d.phase !== 'done') {
+      h += '<div class="tbar"><b id="tbar"></b></div>';
+      h += '<section class="card"><p class="muted">Question ' + (d.idx + 1) + ' of ' + d.total + '</p><div class="qtext">' + esc(d.q.text) + '</div><div class="opts">';
+      d.q.options.forEach(function (t, k) {
+        var mine = d.mine === k, theirs = d.phase === 'r' && d.theirs === k;
+        var cls = mine && theirs ? ' both' : mine ? ' sel' : '';
+        var dis = d.phase === 'r' || d.mine !== null;
+        h += '<button class="opt' + cls + '" data-ans="' + k + '"' + (dis ? ' disabled' : '') + '><span class="t">' + esc(t) + '</span>' +
+          (mine ? '<span class="tag">You</span>' : '') + (theirs ? '<span class="tag">' + esc(o.emoji) + ' ' + esc(o.name) + '</span>' : '') + '</button>';
+      });
+      h += '</div>';
+      if (d.phase === 'r') {
+        var hit = d.marks[d.marks.length - 1];
+        h += '<div class="banner ' + (hit ? 'hit' : 'miss') + '">' + (hit ? 'Same brain!' : (d.mine === null || d.theirs === null ? 'Too slow!' : 'Different planets.')) + '</div>';
+      } else {
+        h += '<p class="muted center">' + (d.mine === null
+          ? (d.oppAnswered ? esc(o.name) + ' has answered. Your turn!' : 'Pick the one that is most you.')
+          : 'Locked in. Waiting for ' + esc(o.name) + '…') + '</p>';
+      }
+      h += '</section><button class="link" data-leave="1">Quit this game</button>';
+    } else {
+      var f = d.final;
+      h += '<section class="card"><div class="pct">' + f.pct + '%</div><h2 class="center">' + esc(f.verdict) + '</h2>' +
+        '<p class="muted center">' + f.matches + ' of ' + d.total + ' answers matched' + (f.points ? ' · +' + f.points + ' points each' : ' · practice round, no points') + '</p></section>';
+      if (!o.bot) {
+        h += '<section class="card"><h2>Keep talking?</h2>';
+        if (d.oppLeft) h += '<p class="muted">' + esc(o.name) + ' has left.</p>';
+        else if (d.talk === true) h += '<p>You said yes. If ' + esc(o.name) + ' says yes too, the chat opens.</p>';
+        else if (d.talk === false) h += '<p class="muted">You passed. ' + esc(o.name) + ' is not told.</p>';
+        else h += '<p>If you both say yes, a private chat opens for ' + esc(d.chatLabel) + '. If either of you passes, nothing happens and nobody is told.</p>' +
+          '<div class="row"><button class="btn mint grow" data-talk="1">Keep talking</button><button class="btn plain grow" data-talk="0">Pass</button></div>';
+        h += '</section>';
+      }
+      h += '<section class="card"><h2>Quick reaction</h2>';
+      if (d.reactions.length) {
+        h += '<div class="feed">';
+        d.reactions.forEach(function (r) { h += '<div class="bubble' + (r.mine ? ' mine' : '') + '">' + esc(REACT[r.key] || '') + '</div>'; });
+        h += '</div>';
+      }
+      h += '<div class="reacts">';
+      Object.keys(REACT).forEach(function (k) { h += '<button class="btn small plain" data-react="' + k + '"' + (d.oppLeft ? ' disabled' : '') + '>' + esc(REACT[k]) + '</button>'; });
+      h += '</div></section>';
+      h += '<div class="row wrap">' +
+        '<button class="btn sky grow" data-rematch="1"' + (d.oppLeft || d.rematch.me ? ' disabled' : '') + '>' +
+        (d.oppLeft ? esc(o.name) + ' left' : d.rematch.me ? 'Waiting for ' + esc(o.name) + '…' : d.rematch.them ? esc(o.name) + ' wants a rematch. Go!' : 'Rematch') + '</button>' +
+        '<button class="btn plain grow" data-leave="1">Back to radar</button></div>';
+      if (!o.bot) h += '<div class="row wrap" style="justify-content:center"><button class="link" data-block="' + esc(o.id) + '">Block ' + esc(o.name) + '</button><button class="link" data-report="' + esc(o.id) + '">Report and block</button></div>';
+    }
+    return h;
+  }
+
+  // ---------- chat ----------
+  function chatShell(c) {
+    var o = c.opp, h = '';
+    h += '<header class="row">' + blob(o, 'big') + '<div class="grow"><div class="name" style="font-size:20px">' + esc(o.name) + '</div><div class="muted">' + esc(about(o)) + '</div></div>' +
+      (c.phase === 'open' ? '<span class="clock" id="ctime"></span>' : '') + '</header>';
+    h += '<section class="card">';
+    if (c.prompt) h += '<div class="note">' + esc(c.prompt) + '</div>';
+    h += '<div class="feed" id="feed" aria-live="polite"></div>';
+    if (c.phase === 'open') {
+      h += '<div class="reacts">' + Object.keys(CHAT_PRESETS).map(function (k) { return '<button class="btn small plain" data-preset="' + k + '">' + esc(CHAT_PRESETS[k]) + '</button>'; }).join('') + '</div>';
+      if (c.canType) h += '<div class="inputrow"><input type="text" id="msg" maxlength="200" placeholder="Type a message" autocomplete="off" aria-label="Message"><button class="btn" data-send="1">Send</button></div>';
+      else h += '<p class="muted">Ready-made messages only for now. Verify your phone on the Me tab to type your own.</p>';
+      h += '<p class="muted">Phone numbers, links and social accounts are blocked.</p>';
+    }
+    h += '</section>';
+    if (c.phase === 'open') {
+      h += '<div class="row wrap" style="justify-content:center"><button class="btn plain small" data-endchat="1">End chat</button>' +
+        '<button class="link" data-block="' + esc(o.id) + '">Block</button><button class="link" data-report="' + esc(o.id) + '">Report and block</button></div>';
+    } else if (c.phase === 'decide') {
+      h += '<section class="card"><h2>Chat over. Add ' + esc(o.name) + ' as a friend?</h2>';
+      if (c.myDecision === true) h += '<p>You said yes. Waiting for ' + esc(o.name) + '…</p>';
+      else h += '<p class="muted">You become friends only if you both say yes. Friends can chat again any time.</p>' +
+        '<div class="row"><button class="btn mint grow" data-decide="1">Add friend</button><button class="btn plain grow" data-decide="0">Goodbye</button></div>';
+      h += '</section>';
+    } else {
+      var text = { friends: 'You and ' + o.name + ' are now friends. Find them on the Friends tab.', no: 'No friend added this time.',
+        full: 'A friends list is full, so nobody was added.', left: o.name + ' left the chat.', ended: 'Chat ended.' }[c.result] || 'Chat ended.';
+      h += '<section class="card"><h2>' + esc(text) + '</h2><button class="btn wide" data-chatleave="1">Back</button></section>';
+    }
+    return h;
+  }
+  function renderChat() {
+    var c = S.chat;
+    clock = { key: 'chat', end: performance.now() + (c.msLeft || 0), total: 1, none: c.msLeft === null };
+    var key = [c.id, c.phase, c.myDecision, c.result, c.canType].join('|');
+    if (key !== chatKey) { chatKey = key; lastHTML = ''; feedHTML = ''; app.innerHTML = chatShell(c); }
+    var html = c.msgs.map(function (m) { return '<div class="bubble' + (m.mine ? ' mine' : '') + '">' + esc(m.text) + '</div>'; }).join('') ||
+      '<p class="muted center">Say hello.</p>';
+    if (html !== feedHTML) { feedHTML = html; var f = document.getElementById('feed'); f.innerHTML = html; f.scrollTop = f.scrollHeight; }
+    tick();
+  }
+  function sendMsg() {
+    var i = document.getElementById('msg'); if (!i) return;
+    var text = i.value.trim(); if (!text) return;
+    act('say', { text: text }).then(function (ok) { if (ok) { i.value = ''; } i.focus(); });
+  }
+
+  // ---------- render loop ----------
+  function renderOverlay() {
+    var h = '';
+    if (S && S.invite && !S.duel && !S.chat) {
+      var f = S.invite.from, chat = S.invite.kind === 'chat';
+      h = '<div class="overlay" role="dialog" aria-modal="true" aria-label="Invitation"><div class="card">' + blob(f, 'big') +
+        '<h2>' + esc(f.name) + (chat ? ' wants to chat' : ' wants to play') + '</h2><p class="muted">' + (chat ? 'Your friend is online.' : esc(about(f)) + (about(f) ? '. ' : '') + 'Five quick questions, about a minute.') + '</p>' +
+        '<div class="row"><button class="btn mint" data-accept="1">' + (chat ? 'Open chat' : 'Let\'s play') + '</button><button class="btn plain" data-decline="1">Not now</button></div></div></div>';
+    }
+    if (overlayEl.innerHTML !== h) overlayEl.innerHTML = h;
+  }
+
+  function render() {
+    if (!S) return;
+    renderOverlay();
+    if (S.chat) return renderChat();
+    chatKey = '';
+    var html;
+    if (S.duel) {
+      var key = S.duel.id + S.duel.phase + S.duel.idx;
+      if (key !== clock.key) clock = { key: key, end: performance.now() + S.duel.msLeft, total: S.duel.phase === 'q' ? 15000 : 3500 };
+      html = duelHTML();
+    } else if (S.me.needsProfile || editProfile) html = profileHTML();
+    else if (dailyMode) html = dailyHTML();
+    else html = tabHTML();
+    if (holding && !S.duel) return;
+    if (html === lastHTML) return;
+    lastHTML = html;
+    app.innerHTML = html;
+    tick();
+    var r = document.getElementById('radius');
+    if (r) {
+      r.oninput = function () { holding = true; document.getElementById('rlabel').textContent = r.value + ' km'; };
+      r.onchange = function () { holding = false; store('sb_radius', +r.value); act('radius', { km: +r.value }); };
+    }
+    // typed values live outside the HTML so a refresh never wipes them
+    var el;
+    if ((el = document.getElementById('pname')) && pf) el.value = pf.name || '';
+    if ((el = document.getElementById('phone'))) el.value = reg.phone;
+    if ((el = document.getElementById('code'))) el.value = reg.code;
+  }
+
+  function tick() {
+    var bar = document.getElementById('tbar');
+    if (bar) bar.style.width = Math.max(0, Math.min(100, (clock.end - performance.now()) / clock.total * 100)) + '%';
+    var ct = document.getElementById('ctime');
+    if (ct) {
+      if (clock.none) ct.textContent = 'No limit';
+      else {
+        var s = Math.max(0, Math.ceil((clock.end - performance.now()) / 1000));
+        ct.textContent = Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2);
+        ct.className = 'clock' + (s <= 30 ? ' low' : '');
+      }
+    }
+  }
+  setInterval(tick, 200);
+
+  document.addEventListener('input', function (ev) {
+    var t = ev.target;
+    if (t.id === 'pname' && pf) pf.name = t.value;
+    else if (t.id === 'phone') reg.phone = t.value;
+    else if (t.id === 'code') reg.code = t.value;
+  });
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Enter' && ev.target.id === 'msg') { ev.preventDefault(); sendMsg(); }
+  });
+
+  document.addEventListener('click', function (ev) {
+    var t = ev.target.closest('button'); if (!t || !me || !S) return;
+    var d = t.dataset;
+    if (d.tab) { tab = d.tab; openMore = null; render(); window.scrollTo(0, 0); }
+    else if (d.ch) act('challenge', { who: d.ch });
+    else if (d.chatreq) act('chatreq', { who: d.chatreq });
+    else if (d.cancel) act('cancel');
+    else if (d.bot) act('bot');
+    else if (d.ans !== undefined) act('answer', { choice: +d.ans });
+    else if (d.react) act('react', { key: d.react });
+    else if (d.rematch) act('rematch');
+    else if (d.talk !== undefined) act('talk', { yes: d.talk === '1' });
+    else if (d.leave) act('leave');
+    else if (d.accept) act('respond', { accept: true });
+    else if (d.decline) act('respond', { accept: false });
+    else if (d.more) { openMore = openMore === d.more ? null : d.more; render(); }
+    else if (d.block) { openMore = null; act('block', { who: d.block }).then(function (ok) { if (ok) toast('Blocked. You will not see each other again.'); }); }
+    else if (d.report) { openMore = null; act('report', { who: d.report }).then(function (ok) { if (ok) toast('Reported and blocked. Thank you.'); }); }
+    else if (d.unfriend) { openMore = null; act('unfriend', { who: d.unfriend }); }
+    else if (d.wave) act('wave', { who: d.wave });
+    else if (d.unwave) act('unwave', { who: d.unwave });
+    else if (d.daily) { dailyMode = true; render(); window.scrollTo(0, 0); }
+    else if (d.dailyback) { dailyMode = false; render(); }
+    else if (d.dq !== undefined) act('daily', { q: +d.dq, choice: +d.dc });
+    else if (d.preset) act('say', { preset: d.preset });
+    else if (d.send) sendMsg();
+    else if (d.endchat) act('endchat');
+    else if (d.decide !== undefined) act('decide', { add: d.decide === '1' });
+    else if (d.chatleave) act('chatleave');
+    else if (d.editprofile) { editProfile = true; pf = null; render(); window.scrollTo(0, 0); }
+    else if (d.pfcancel) { editProfile = false; pf = null; render(); }
+    else if (d.pfage) { pf.age = d.pfage; render(); }
+    else if (d.pfintent) { pf.intent = d.pfintent; render(); }
+    else if (d.pfint) {
+      var i = pf.interests.indexOf(d.pfint);
+      if (i >= 0) pf.interests.splice(i, 1); else if (pf.interests.length < 3) pf.interests.push(d.pfint); else toast('Three is the limit. Tap one to remove it first.');
+      render();
+    }
+    else if (d.pfsave) {
+      act('profile', { age: pf.age, intent: pf.intent, interests: pf.interests, name: S.me.registered ? pf.name : undefined })
+        .then(function (ok) { if (ok) { editProfile = false; pf = null; render(); } });
+    }
+    else if (d.regstart) act('reg_start', { phone: reg.phone }).then(function (r) { if (r) { reg.testCode = r.testCode; reg.code = ''; render(); } });
+    else if (d.regreset) { reg.testCode = null; reg.code = ''; render(); }
+    else if (d.regverify) {
+      act('reg_verify', { code: reg.code }).then(function (r) {
+        if (!r) return;
+        reg = { phone: '', code: '', testCode: null };
+        if (r.switchTo) { me = r.switchTo; store('sb_player', me); connect(); toast('Welcome back. Your account is restored.'); }
+        else toast('Phone verified.');
+      });
+    }
+    else if (d.plan) act('plan', { plan: d.plan });
+  });
+
+  renderWelcome();
+})();
+</script>
+</body>
+</html>
